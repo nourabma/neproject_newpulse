@@ -109,8 +109,23 @@ class FeedPoller:
             self._stop.wait(self.interval_seconds)
 
 
+def _interval_from_env(default: int) -> int:
+    raw = os.getenv("POLL_INTERVAL_SECONDS")
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        print(
+            f"[ingest] ignoring non-integer POLL_INTERVAL_SECONDS={raw!r}",
+            file=sys.stderr,
+        )
+        return default
+    return max(10, value)
+
+
 def main() -> None:
-    FeedPoller().run()
+    FeedPoller(interval_seconds=_interval_from_env(default=50)).run()
 
 
 if __name__ == "__main__":
